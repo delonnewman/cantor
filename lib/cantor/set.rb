@@ -38,7 +38,8 @@ module Cantor
 				raise "must specify a set as an enumrable object or a block"
 			end
 
-			@set      = set ? lazy(self) { set } : lazy(self, &block)
+			@set      = !!set ? lazy(self) { set } : lazy(self, &block)
+
 			@superset = superset.add_subset(self) if superset
 			@subsets  = Set.new(self, [self])
 			@members  = Set.new(self, [@set, @subsets])
@@ -78,6 +79,13 @@ module Cantor
 		def add_subset(set)
 			@subsets << set
 		end
+
+		def element?(obj)
+			@subsets.include?(obj) || 
+				(elem = @members.map { |m| m.include?(obj) }.uniq).count == 1 && elem.first == true
+		end
+		alias element? include?
+		alias element? member?
 
 		def where(query={}, &block)
 			if @set.respond_to?(:all)
