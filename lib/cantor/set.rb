@@ -39,7 +39,7 @@ module Cantor
 			end
 
 			@set      = set ? lazy(self) { set } : lazy(self, &block)
-			@superset = superset.add_subset(@set) if superset
+			@superset = superset.add_subset(self) if superset
 			@subsets  = Set.new(self, [self])
 			@members  = Set.new(self, [@set, @subsets])
 		end
