@@ -31,17 +31,21 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_accessor :title, :subsets, :fields, :headers, :subtitle, :sections
+		attr_accessor :subsets, :superset, :fields
 	
 		def initialize(superset=nil,  &block)
-			@subsets  = [self]
-
 			@superset = superset
-			@set      = lazy(@superset, &block)
+			@set      = lazy(self, &block)
+			@subsets  = [self]
 		end
 
 		def inspect
-			"#<#{self.class.inspect} @superset=#{@superset.inspect} @subsets=#{@subsets.inspect}>"
+			"#<#{self.class.inspect} @superset=#{@superset.inspect}
+			 @set=#{@set.inspect} @subsets=#{@subsets.inspect}>"
+		end
+
+		def eval
+			@set.eval
 		end
 
 		def each(&block)
@@ -67,13 +71,15 @@ module Cantor
 		alias << push
 
 		def where(query={}, &block)
-			lazy {
-				if @set.respond_to?(:all)
-					Set.new(self) { @set.all(query) }
-				else
-					Set.new(self) { @set.select(&block) }
-				end
-			}
+			if @set.respond_to?(:all)
+				Set.new(self) { @set.all(query) }
+			else
+				Set.new(self) { @set.select(&block) }
+			end
+		end
+
+		def method_missing(method, *args, &block)
+			@set.send(method, *args, &block)
 		end
 	end
 end
