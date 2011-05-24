@@ -14,7 +14,7 @@ begin
 #    spec.add_development_dependency('faker')
     spec.add_development_dependency('jeweler')
 
-#    spec.add_dependency('rufus-scheduler')
+		spec.add_dependency('church')
 #    spec.add_dependency('mongrel')
 #    spec.add_dependency('will_paginate')
 #    spec.add_dependency('rails', '>= 2.3.4')
