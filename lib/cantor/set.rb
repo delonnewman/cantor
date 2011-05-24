@@ -37,7 +37,7 @@ module Cantor
 			@set = @superset = nil
 
 			if !args.empty? && !block
-				if args.first.is_a?(Cantor::Set)
+				if args.first.respond_to?(:where)
 					@superset = args[0]
 					@set      = lazy(self) { args[1] }
 				else
