@@ -37,7 +37,9 @@ module Cantor
 			@set = @superset = nil
 
 			if !args.empty? && !block
-				if args.first.respond_to?(:where)
+				if args.count > 2
+					@set = lazy(self) { args }
+				elsif args.count == 2
 					@superset = args[0]
 					@set      = lazy(self) { args[1] }
 				else
@@ -49,7 +51,7 @@ module Cantor
 			elsif args.empty? && !!block
 				@set = lazy(self, &block)
 			else
-				raise "must specify a set as an enumrable object or a block"
+				raise "must specify a set as an enumerable object or a block"
 			end
 
 			@subsets  = [self]
