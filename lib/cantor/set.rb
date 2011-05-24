@@ -52,7 +52,7 @@ module Cantor
 		end
 
 		def map(&block)
-			new { @set.map(&block) }
+			Set.new { @set.map(&block) }
 		end
 	
 		def get(pid)
