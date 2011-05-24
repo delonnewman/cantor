@@ -34,28 +34,17 @@ module Cantor
 		attr_reader :code
 		attr_accessor :title, :subsets, :fields, :headers, :subtitle, :sections
 	
-		def initialize(code=nil, superset=nil,  &block)
-			@fields   = [ :pid, :name, :dx_date, :path_report ]
-			@headers  = %w{ PID Name DX\ Date Path\ Report }
+		def initialize(superset=nil,  &block)
 			@subsets  = [self]
 			@sections = []
 
 			@superset = superset
-			@code     = CancerCode.get(code)
-			@set      = lazy(@code, @superset, &block)
-
-			if @code
-				@title = "#{@code.code} - #{@code.description}, #{count} Cases"
-			end
+			@set      = lazy(@superset, &block)
 		end
 
 		def inspect
 			"#<#{self.class.inspect}, @title=#{@title.inspect}, " +
 				"@code=#{@code.inspect}, @subsets=#{@subsets.inspect}>"
-		end
-
-		def subtitle
-			@subtitle || @title
 		end
 
 		def each(&block)
@@ -66,7 +55,7 @@ module Cantor
 			if @set.respond_to?(:get)
 				@set.get(pid)
 			else
-				@set.select { |o| o.pid == pid }
+				@set.select { |o| o.pid == pid }.first
 			end
 		end
 		alias [] get
@@ -86,46 +75,13 @@ module Cantor
 		end
 
 		def data
-			# return @set if is AoA
-			return @set if @set.respond_to?(:first) && @set.first.respond_to?(:first)
-			lazy {
-				@set.map { |c|
-					c.get_dxs(@code.code).map { |dx|
-						@fields.map { |f|
-							if    f == :dx_date     then dx.date.strftime('%D')
-							elsif f == :path_report then dx.path_report
-							else 
-								c.send(f)
-							end
-						}
-					}
-				}.fflatten(1)
-			}
+			@set
 		end
 	
 		def where(query={}, &block)
 			lazy {
-				fields = REDUNDANT_FIELDS.mmap(:to_sym)
 				if @set.respond_to?(:all)
-					if query.keys.any? { |k| fields.include?(k) }
-						subquery = nil
-		
-						fields.each do |f|
-							if query.has_key?(f)
-								q = (1..4).map do |i|
-									@set.all(:"#{f}_#{i}" => query[f])
-								end.reduce(:+)
-		
-								subquery = subquery ? subquery + q : q
-							end
-		
-							query.delete(f)
-						end
-		
-						Set.new { subquery & @set.all(query) }
-					else
-						Set.new { @set.all(query) }
-					end
+					Set.new { @set.all(query) }
 				else
 					Set.new { @set.select(&block) }
 				end
