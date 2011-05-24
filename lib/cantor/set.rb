@@ -54,6 +54,15 @@ module Cantor
 		def map(&block)
 			Set.new { @set.map(&block) }
 		end
+
+		def join(sep)
+			@set.join(sep)
+		end
+
+		def select(*fields)
+			s = Struct.new(*fields)
+			map { |r| s.new(*fields.map { |f| r.send(f) }) }
+		end
 	
 		def get(pid)
 			if @set.respond_to?(:get)
