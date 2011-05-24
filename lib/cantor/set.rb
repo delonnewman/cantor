@@ -55,9 +55,7 @@ module Cantor
 				raise "must specify a set as an enumerable object or a block"
 			end
 
-			@subsets  = [self]
-			@members  = {:self => @set}
-			@numbered = 0
+			@subsets  = {:self => self}
 		end
 
 		def inspect
@@ -85,14 +83,15 @@ module Cantor
 			s = Struct.new(*fields)
 			map { |r| s.new(*fields.map { |f| r.send(f) }) }
 		end
-	
-		def push(set)
-			@members << set
-		end
-		alias << push
 
-		def add_subset(set)
-			@subsets << set
+		def add_subset(name, set)
+			@subsets[name] = set
+		end
+	
+		def subset(name)
+			if superset
+				superset.add_subset(name, self)
+			end
 		end
 
 		def element?(obj)
@@ -104,7 +103,6 @@ module Cantor
 
 		def where(query={}, &block)
 			if @set.respond_to?(:all) && !block
-				p :all
 				Set.new(self) { @set.all(query) }
 			else
 				Set.new(self) { @set.select(&block) }
@@ -112,7 +110,11 @@ module Cantor
 		end
 
 		def method_missing(method, *args, &block)
-			@set.send(method, *args, &block)
+			if @subsets.keys.include?(method)
+				@subsets[method]
+			else
+				raise "method '#{method}' missing at #{__FILE__}:#{__LINE__}"
+			end
 		end
 	end
 end
