@@ -5,7 +5,10 @@ module Cantor
 end
 
 module Kernel
-	def set(*args, &block)
-		Cantor::Set.new(*args, &block)
+	def set(name, *args, &block)
+		s = Cantor::Set.new(*args, &block)
+		s.name = name
+		self.const_set(name, s)
+		s
 	end
 end

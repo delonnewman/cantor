@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'church'
 
 require File.join(File.dirname(__FILE__), 'report')
@@ -31,7 +32,7 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_accessor :subsets, :superset, :members, :fields
+		attr_accessor :subsets, :superset, :members, :fields, :name
 	
 		def initialize(*args, &block)
 			@set = @superset = nil
@@ -55,9 +56,8 @@ module Cantor
 			end
 
 			@subsets  = [self]
-			@members  = [@set, @subsets]
-
-			@superset.add_subset(self) unless @superset.nil? || !@superset.respond_to?(:subsets)
+			@members  = {:self => @set}
+			@numbered = 0
 		end
 
 		def inspect
@@ -75,10 +75,6 @@ module Cantor
 
 		def map(&block)
 			Set.new(self) { @set.map(&block) }
-		end
-
-		def count
-			@set.count
 		end
 
 		def join(sep)
@@ -108,6 +104,7 @@ module Cantor
 
 		def where(query={}, &block)
 			if @set.respond_to?(:all) && !block
+				p :all
 				Set.new(self) { @set.all(query) }
 			else
 				Set.new(self) { @set.select(&block) }
