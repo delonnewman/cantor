@@ -31,12 +31,17 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_accessor :subsets, :superset, :fields
+		attr_accessor :subsets, :superset, :members, :fields
 	
-		def initialize(superset=nil,  &block)
-			@superset = superset
-			@set      = lazy(self, &block)
-			@subsets  = [self]
+		def initialize(superset=nil, set=nil, &block)
+			if !set && !block
+				raise "must specify a set as an enumrable object or a block"
+			end
+
+			@set      = set ? lazy(self) { set } : lazy(self, &block)
+			@superset = superset.add_subset(@set) if superset
+			@subsets  = Set.new(self, [self])
+			@members  = Set.new(self, [@set, @subsets])
 		end
 
 		def inspect
@@ -66,9 +71,13 @@ module Cantor
 		end
 	
 		def push(set)
-			@subsets << set
+			@members << set
 		end
 		alias << push
+
+		def add_subset(set)
+			@subsets << set
+		end
 
 		def where(query={}, &block)
 			if @set.respond_to?(:all)
