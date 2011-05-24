@@ -42,8 +42,7 @@ module Cantor
 		end
 
 		def inspect
-			"#<#{self.class.inspect}, @title=#{@title.inspect}, " +
-				"@code=#{@code.inspect}, @subsets=#{@subsets.inspect}>"
+			"#<#{self.class.inspect} @superset=#{@superset.inspect} @subsets=#{@subsets.inspect}>"
 		end
 
 		def each(&block)
@@ -51,7 +50,7 @@ module Cantor
 		end
 
 		def map(&block)
-			Set.new { @set.map(&block) }
+			Set.new(self) { @set.map(&block) }
 		end
 
 		def join(sep)
@@ -63,39 +62,18 @@ module Cantor
 			map { |r| s.new(*fields.map { |f| r.send(f) }) }
 		end
 	
-		def get(pid)
-			if @set.respond_to?(:get)
-				@set.get(pid)
-			else
-				@set.select { |o| o.pid == pid }.first
-			end
-		end
-		alias [] get
-
 		def push(set)
 			@subsets << set
 			@sections << set
 		end
 		alias << push
 
-		def subsets(*codes, &block)
-			if codes && block
-				@subsets = lazy { codes.map { |c| Set.new(c, &block) } }
-			else
-				@subsets
-			end
-		end
-
-		def data
-			@set
-		end
-	
 		def where(query={}, &block)
 			lazy {
 				if @set.respond_to?(:all)
-					Set.new { @set.all(query) }
+					Set.new(self) { @set.all(query) }
 				else
-					Set.new { @set.select(&block) }
+					Set.new(self) { @set.select(&block) }
 				end
 			}
 		end
