@@ -33,14 +33,25 @@ module Cantor
 
 		attr_accessor :subsets, :superset, :members, :fields
 	
-		def initialize(superset=nil, set=nil, &block)
-			if !set && !block
+		def initialize(*args, &block)
+			@set = @superset = nil
+
+			if !args.empty? && !block
+				if args.first.is_a?(Cantor::Set)
+					@superset = args[0]
+					@set      = lazy(self) { args[1] }
+				else
+					@set = lazy(self) { args[0] }
+				end
+			elsif !args.empty? && !!block
+				@superset = args.first
+				@set      = lazy(self, &block)
+			else
 				raise "must specify a set as an enumrable object or a block"
 			end
 
-			@set      = !!set ? lazy(self) { set } : lazy(self, &block)
+			@superset.add_subset(self) if @superset
 
-			@superset = superset.add_subset(self) if superset
 			@subsets  = Set.new(self, [self])
 			@members  = Set.new(self, [@set, @subsets])
 		end
