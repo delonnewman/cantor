@@ -62,7 +62,7 @@ module Cantor
 
 		def inspect
 			"#<#{self.class.inspect} @superset=#{@superset.inspect} " +
-			"@members=#{@members.inspect}>"
+			"@subsets=#{@subsets.inspect}>"
 		end
 
 		def eval
