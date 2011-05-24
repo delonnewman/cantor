@@ -106,7 +106,13 @@ module Cantor
 			if @set.respond_to?(:all) && !block
 				Set.new(self) { @set.all(query) }
 			else
-				Set.new(self) { @set.enum_select(&block) }
+				Set.new(self) {
+					if @set.respond_to?(:enum_select)
+						@set.enum_select(&block)
+					else
+						@set.select(&block)
+					end
+				}
 			end
 		end
 
