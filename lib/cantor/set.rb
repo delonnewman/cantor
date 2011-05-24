@@ -50,6 +50,10 @@ module Cantor
 		def each(&block)
 			@set.each(&block)
 		end
+
+		def map(&block)
+			new { @set.map(&block) }
+		end
 	
 		def get(pid)
 			if @set.respond_to?(:get)
