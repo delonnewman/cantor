@@ -63,12 +63,8 @@ module Reportable
 				doc.text(@other.title, :size => 14, :style => :bold) if @other.title
 				doc.text("\n")
 	
-				p @other.sections
-				p @other.sections.count
 				if @other.sections && !@other.sections.empty?
 					@other.sections.each do |s|
-						p s.subtitle
-						p s.count
 						if s.subtitle
 							doc.text(s.subtitle, :size => 12, :style => :bold)
 							doc.text("\n")
@@ -82,7 +78,6 @@ module Reportable
 	
 				doc
 			end
-	
 	
 			def render
 				generate.render
