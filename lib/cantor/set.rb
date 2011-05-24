@@ -79,6 +79,7 @@ module Cantor
 			@set.join(sep)
 		end
 
+		alias enum_select select
 		def select(*fields)
 			s = Struct.new(*fields)
 			map { |r| s.new(*fields.map { |f| r.send(f) }) }
@@ -105,7 +106,7 @@ module Cantor
 			if @set.respond_to?(:all) && !block
 				Set.new(self) { @set.all(query) }
 			else
-				Set.new(self) { @set.select(&block) }
+				Set.new(self) { @set.enum_select(&block) }
 			end
 		end
 
