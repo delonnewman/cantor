@@ -35,7 +35,6 @@ module Cantor
 	
 		def initialize(superset=nil,  &block)
 			@subsets  = [self]
-			@sections = []
 
 			@superset = superset
 			@set      = lazy(@superset, &block)
@@ -64,7 +63,6 @@ module Cantor
 	
 		def push(set)
 			@subsets << set
-			@sections << set
 		end
 		alias << push
 
