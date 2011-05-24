@@ -107,7 +107,7 @@ module Cantor
 		alias element? member?
 
 		def where(query={}, &block)
-			if @set.respond_to?(:all)
+			if @set.respond_to?(:all) && !block
 				Set.new(self) { @set.all(query) }
 			else
 				Set.new(self) { @set.select(&block) }
