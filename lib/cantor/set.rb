@@ -46,6 +46,8 @@ module Cantor
 			elsif !args.empty? && !!block
 				@superset = args.first
 				@set      = lazy(self, &block)
+			elsif args.empty? && !!block
+				@set = lazy(self, &block)
 			else
 				raise "must specify a set as an enumrable object or a block"
 			end
