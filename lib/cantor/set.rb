@@ -77,6 +77,10 @@ module Cantor
 			Set.new(self) { @set.map(&block) }
 		end
 
+		def count
+			@set.count
+		end
+
 		def join(sep)
 			@set.join(sep)
 		end
