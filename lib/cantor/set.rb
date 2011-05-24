@@ -52,7 +52,7 @@ module Cantor
 				raise "must specify a set as an enumrable object or a block"
 			end
 
-			@superset.add_subset(self) if @superset
+			@superset.add_subset(self) unless @superset.nil? || !@superset.respond_to?(:subsets)
 
 			@subsets  = Set.new(self, [self])
 			@members  = Set.new(self, [@set, @subsets])
