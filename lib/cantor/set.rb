@@ -31,7 +31,6 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_reader :code
 		attr_accessor :title, :subsets, :fields, :headers, :subtitle, :sections
 	
 		def initialize(superset=nil,  &block)
