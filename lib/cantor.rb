@@ -8,7 +8,12 @@ module Kernel
 	def defset(name, *args, &block)
 		s = Cantor::Set.new(*args, &block)
 		s.name = name
-		self.const_set(name, s)
+		mod = self.to_s == 'main' ? Kernel : self
+		mod.const_set(name, s)
 		s
+	end
+
+	def where(&block)
+		Cantor::WhereClause.new(&block)
 	end
 end

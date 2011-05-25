@@ -27,6 +27,14 @@ module Cantor
 		klass.extend(ClassMethods)
 	end
 
+	class WhereClause
+		attr_reader :block
+
+		def initialize(&block)
+			@block = block
+		end
+	end
+
 
 	class Set
 		include Enumerable
@@ -85,13 +93,11 @@ module Cantor
 			map { |r| s.new(*fields.map { |f| r.send(f) }) }
 		end
 
-		def add_subset(name, set)
-			@subsets[name] = set
-		end
-	
-		def subset(name)
-			if superset
-				superset.add_subset(name, self)
+		def subset(set)
+			if set.count == 1 && set.respond_to?(:keys)
+				@subsets[set.keys.first] = where(&set[set.keys.first].block)
+			else
+				raise "Wrong arguments"
 			end
 		end
 
