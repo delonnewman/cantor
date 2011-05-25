@@ -89,8 +89,14 @@ module Cantor
 
 		alias enum_select select
 		def select(*fields)
-			s = Struct.new(*fields)
-			map { |r| s.new(*fields.map { |f| r.send(f) }) }
+			@cache ||={}
+			name = fields.to_s
+			if c = @cache[name] then c
+			else
+				s = Struct.new(*fields)
+				c = @cache[name] = map { |r| s.new(*fields.map { |f| r.send(f) }) }
+				c
+			end
 		end
 
 		def subset(set)
