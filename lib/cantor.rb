@@ -13,7 +13,11 @@ module Kernel
 		s
 	end
 
-	def where(&block)
+	def where(method=nil, &block)
+		if method
+			block = Proc.new { |r| r.send(method) }	
+		end
+
 		Cantor::WhereClause.new(&block)
 	end
 end
