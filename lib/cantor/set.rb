@@ -72,19 +72,19 @@ module Cantor
 		end
 
 		def eval
-			@set.eval
+			@object ||= @set.eval
 		end
 
 		def each(&block)
-			@set.each(&block)
+			self.eval.each(&block)
 		end
 
 		def map(&block)
-			Set.new(self) { @set.map(&block) }
+			Set.new(self) { self.eval.map(&block) }
 		end
 
 		def join(sep)
-			@set.join(sep)
+			self.eval.join(sep)
 		end
 
 		alias enum_select select
