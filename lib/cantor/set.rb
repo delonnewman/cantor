@@ -131,7 +131,7 @@ module Cantor
 				p args
 				
 				block = if args.count > 0
-									Proc.new { |r| (results = args.map { |arg| r.send(method) == arg }.uniq).count == 1 && results.first == true }
+									Proc.new { |r| args.any? { |arg| r.send(method) == arg } }
 								else
 									Proc.new { |r| r.send(method) }	
 								end
