@@ -149,7 +149,7 @@ module Cantor
 			if @subsets.keys.include?(method)
 				@subsets[method]
 			else
-				raise "method '#{method}' missing at #{__FILE__}:#{__LINE__}"
+				self.where(method)
 			end
 		end
 	end
