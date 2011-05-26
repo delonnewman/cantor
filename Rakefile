@@ -23,3 +23,9 @@ begin
 rescue LoadError
   puts "Jeweler not available.  Install it with: gem install jeweler"
 end
+
+desc "Push changes to git and deploy to system"
+task :deploy do
+	sh "git push"
+	sh "sudo ggem cantor"
+end

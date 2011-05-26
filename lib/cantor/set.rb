@@ -101,7 +101,9 @@ module Cantor
 
 		def subset(set)
 			if set.count == 1 && set.respond_to?(:keys)
-				@subsets[set.keys.first] = where(&set[set.keys.first].block)
+				@subset = set.keys.first
+				@subsets[@subset] = where(&set[@subset].block)
+				@subsets[@subset]
 			else
 				raise "Wrong arguments"
 			end
