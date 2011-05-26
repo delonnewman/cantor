@@ -87,6 +87,10 @@ module Cantor
 			self.eval.join(sep)
 		end
 
+		def empty?
+			count == 0
+		end
+
 		alias enum_select select
 		def select(*fields)
 			@cache ||={}
