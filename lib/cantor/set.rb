@@ -128,6 +128,7 @@ module Cantor
 			method = args.shift if args.first.is_a?(Symbol)
 
 			if method
+				p args
 				
 				block = if args.count > 0
 									Proc.new { |r| (results = args.map { |arg| r.send(method) == arg }.uniq).count == 1 && results.first == true }
@@ -156,7 +157,7 @@ module Cantor
 			if @subsets.keys.include?(method)
 				@subsets[method]
 			else
-				self.where(method)
+				self.where(method, *args, &block)
 			end
 		end
 	end
