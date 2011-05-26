@@ -128,8 +128,7 @@ module Cantor
 			method = args.shift if args.first.is_a?(Symbol)
 
 			if method
-				p args
-				
+
 				block = if args.count > 0
 									Proc.new { |r| args.any? { |arg| r.send(method) == arg } }
 								else
