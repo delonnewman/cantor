@@ -1,5 +1,8 @@
 require 'prawn'
 require 'prawn/layout'
+require 'fastercsv'
+require 'yaml'
+
 require 'church'
 
 
@@ -32,23 +35,22 @@ module Reportable
 
 		@@formats = [ :pdf, :ascii, :csv ]
 
-		def to_format(format, out=nil)
+		def to(format, out=nil)
 			klass = Reportable.const_get(:"#{format.to_s.upcase}")::Report
-			klass.new(@other, *@fields, &@block).write(out)
-		end
-
-		def method_missing(method, *args, &block)
-			if !!method.to_s.match(/^to_/) &&
-				 @@formats.include?(format = method.to_s.sub('to_', '').to_sym)
-				to_format(format, args.first)	
+			if out
+				klass.new(@other, *@fields, &@block).write(out)
 			else
-				raise "'#{method}' missing from #{self.class} at #{__FILE__}:#{__LINE__}"
+				klass.new(@other, *@fields, &@block)
 			end
 		end
 
 		def write(out=nil)
-			if out
-				io = out.is_a?(String) ? File.open(out, 'w') : $stdout 
+			if !!out
+				io = if    out.is_a?(String)       then File.open(out, 'w')
+						 elsif out.respond_to?(:write) then out 
+						 else  $stdout
+						 end
+
 				io.write(render)
 			else
 				render
@@ -135,6 +137,14 @@ module Reportable
 
 			def render
 				generate
+			end
+		end
+	end
+
+	module YAML
+		class Report < Reportable::Report
+			def render
+				::YAML.dump(@other)
 			end
 		end
 	end

@@ -114,7 +114,18 @@ module Cantor
 		alias element? include?
 		alias element? member?
 
-		def where(query={}, &block)
+		def where(*args, &block)
+			query  = nil
+			method = nil
+
+			query  = args.first if args.first.is_a?(Hash)
+			method = args.first if args.first.is_a?(Symbol)
+
+			if method
+				block = Proc.new { |r| r.send(method) }	
+				return Set.new(self) { @set.select(&block) }
+			end
+
 			if @set.respond_to?(:all) && !block
 				Set.new(self) { @set.all(query) }
 			else

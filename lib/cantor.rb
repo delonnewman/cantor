@@ -13,6 +13,10 @@ module Kernel
 		s
 	end
 
+	def set(*args, &block)
+		Cantor::Set.new(*args, &block)
+	end
+
 	def where(method=nil, &block)
 		if method
 			block = Proc.new { |r| r.send(method) }	
