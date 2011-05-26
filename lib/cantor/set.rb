@@ -124,12 +124,19 @@ module Cantor
 			query  = nil
 			method = nil
 
-			query  = args.first if args.first.is_a?(Hash)
-			method = args.first if args.first.is_a?(Symbol)
+			query  = args.shift if args.first.is_a?(Hash)
+			method = args.shift if args.first.is_a?(Symbol)
 
 			if method
-				block = Proc.new { |r| r.send(method) }	
+				
+				block = if args.count > 0
+									Proc.new { |r| (results = args.map { |arg| r.send(method) == arg }.uniq).count == 1 && results.first == true }
+								else
+									Proc.new { |r| r.send(method) }	
+								end
+
 				return Set.new(self) { @set.select(&block) }
+
 			end
 
 			if @set.respond_to?(:all) && !block
