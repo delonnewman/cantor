@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), 'cantor/set')
+require File.expand_path(File.join(File.dirname(__FILE__), 'cantor/set'))
 
 module Cantor
 	VERSION = '0.0.1'
@@ -16,6 +16,7 @@ module Kernel
 	def set(*args, &block)
 		Cantor::Set.new(*args, &block)
 	end
+	alias from set
 
 	def where(method=nil, &block)
 		if method

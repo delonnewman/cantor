@@ -72,7 +72,17 @@ module Cantor
 		end
 
 		def eval
-			@object ||= @set.eval
+			if @object then @object
+			else
+				if (@object = @set.eval).respond_to?(:each)
+					@object
+				elsif !@object.respond_to?(:each) && @object.respond_to?(:all)
+					# dereference ActiveRecord && DataMapper classes
+					@object = @set.eval.all
+				else
+					raise "set should be Enumerable"
+				end
+			end
 		end
 
 		def each(&block)
@@ -91,7 +101,6 @@ module Cantor
 			count == 0
 		end
 
-		alias enum_select select
 		def select(*fields)
 			@cache ||={}
 			name = fields.to_s
@@ -126,35 +135,34 @@ module Cantor
 
 			query  = args.shift if args.first.is_a?(Hash)
 			method = args.shift if args.first.is_a?(Symbol)
+			negate = true       if args[0].is_a?(Symbol) && args[0] == :not
+			args.shift
+
+			q_meth = negate ? :reject : :find_all
 
 			if method
-
 				block = if args.count > 0
 									Proc.new { |r| args.any? { |arg| r.send(method) == arg } }
 								else
 									Proc.new { |r| r.send(method) }	
 								end
 
-				return Set.new(self) { @set.select(&block) }
-
 			end
 
 			if @set.respond_to?(:all) && !block
 				Set.new(self) { @set.all(query) }
+			elsif @set.respond_to?(:all) && block
+				Set.new(self) { @set.all.send(q_meth, &block) }
 			else
-				Set.new(self) {
-					if @set.respond_to?(:enum_select)
-						@set.enum_select(&block)
-					else
-						@set.select(&block)
-					end
-				}
+				Set.new(self) { @set.send(q_meth, &block) }
 			end
 		end
 
 		def method_missing(method, *args, &block)
 			if @subsets.keys.include?(method)
 				@subsets[method]
+			elsif Enumerable.instance_methods.include?(method)
+				self.eval.send(method, *args, &block)
 			else
 				self.where(method, *args, &block)
 			end
