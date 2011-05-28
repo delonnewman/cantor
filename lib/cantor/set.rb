@@ -82,6 +82,7 @@ module Cantor
 				else
 					raise "set should be Enumerable"
 				end
+				@object
 			end
 		end
 
