@@ -132,11 +132,14 @@ module Cantor
 		def where(*args, &block)
 			query  = nil
 			method = nil
+			negate = false
 
 			query  = args.shift if args.first.is_a?(Hash)
 			method = args.shift if args.first.is_a?(Symbol)
-			negate = true       if args[0].is_a?(Symbol) && args[0] == :not
-			args.shift
+			if args[0].is_a?(Symbol) && args[0] == :not
+				args.shift
+				negate = true
+			end
 
 			q_meth = negate ? :reject : :find_all
 
