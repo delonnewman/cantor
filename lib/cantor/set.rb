@@ -40,7 +40,8 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_accessor :subsets, :superset, :members, :fields, :name
+		attr_accessor :superset
+		attr_reader   :members,  :subsets
 	
 		def initialize(*args, &block)
 			@set = @superset = nil
@@ -63,7 +64,8 @@ module Cantor
 				raise "must specify a set as an enumerable object or a block"
 			end
 
-			@subsets  = {:self => self}
+			@subsets = {:self => self}
+			@members = {} 
 		end
 
 		def inspect
@@ -119,9 +121,14 @@ module Cantor
 				@subsets[@subset] = where(&set[@subset].block)
 				@subsets[@subset]
 			else
-				raise "Wrong arguments"
+				raise "wrong arguments, expected: subset(:name => where([args]))"
 			end
 		end
+
+		def add_member(name, value)
+			@members[name] = value
+		end
+		alias []= add_member
 
 		def element?(obj)
 			@subsets.include?(obj) || 
@@ -162,9 +169,19 @@ module Cantor
 			end
 		end
 
+		alias std_respond_to? respond_to?
+		def respond_to?(meth)
+			@subsets.keys.include?(meth) ||
+			@members.keys.include?(meth) ||
+			Enumerable.instance_methods.include?(meth) ||
+			std_respond_to?(meth)
+		end
+
 		def method_missing(method, *args, &block)
 			if @subsets.keys.include?(method)
 				@subsets[method]
+			elsif @members.keys.include?(method)
+				@members[method]
 			elsif Enumerable.instance_methods.include?(method)
 				self.eval.send(method, *args, &block)
 			else

@@ -10,73 +10,136 @@ module Reportable
 	class Report
 		attr_accessor :fields, :headers
 
-		def initialize(obj, *fields, &block)
+		def initialize(obj, args={}, &block)
 			@other   = obj
 			@block   = block
-			@fields  = fields
+			@args    = args
+			@fields  = args[:fields]
+			@headers = args[:headers]
 
 			if not @block.nil?
 				@block.call(self, obj)
-			else
-				if @fields.count == 1 && @fields.first.respond_to?(:keys)
-					fields   = @fields.first.keys
-					@headers = fields.map { |f| @fields.first[f] }
-					@fields  = fields
-				elsif @fields.count == 1 && @fields.first.respond_to?(:each)
-					@fields = fields.first
-				else
-					@fields = fields
-				end
-
-				@headers = @fields.map { |f| f.to_s.upcase.gsub('_', ' ') }
 			end
-			
+
+			p self.class
+			p @other.fields
+			if !@fields && @other.respond_to?(:fields)
+				@fields = @other.fields
+			elsif @fields.nil? || @fields.empty?
+				raise "fields: '#{@fields.inspect}' cannot be nil or empty"
+			elsif @fields.count == 1 && @fields.first.respond_to?(:keys)
+				fields   = @fields.first.keys
+				@headers = fields.map { |f| @fields.first[f] }
+				@fields  = fields
+			else
+				@fields = args[:fields]
+			end
+
+
+			@headers = @fields.map { |f| f.to_s.upcase.gsub('_', ' ') } unless @headers
 		end
 
-		@@formats = [ :pdf, :ascii, :csv ]
+		def count
+			headers? ? data.count - 1 : data.count
+		end
 
-		def to(format, out=nil)
-			klass = Reportable.const_get(:"#{format.to_s.upcase}")::Report
-			if out
-				klass.new(@other, *@fields, &@block).write(out)
+		def headers?
+			@headers && !@headers.empty?
+		end
+
+		def data?
+			not data.empty?
+		end
+
+		def data
+			if @data then @data
 			else
-				klass.new(@other, *@fields, &@block)
+				@data = []
+				@data << @headers if headers?
+	
+				if @other.respond_to?(:us) || @other.respond_to?(:map)
+					@other = @other.respond_to?(:eval) ? @other.eval : @other
+					@other.each { |o| @data << @fields.map { |f| o.send(f) } }
+				else
+					raise "object must be enumerable"
+				end
+				@data
+			end
+		end
+
+		@@formats = [ :pdf, :csv ]
+
+		def as(format, args={})
+			if args.respond_to?(:keys)
+				out = args.delete(:to)
+				@args.merge(args)
+			else
+				raise "args should be a hash"
+			end
+
+			raise "valid formats are #{@@formats.join(', ')}, '#{format}' given" unless @@formats.include?(format)
+
+			klass = get_format_class(format)
+
+			if    out == :string then klass.new(@other, @args, &@block).write
+			elsif out == nil     then klass.new(@other, @args, &@block)
+			else                      klass.new(@other, @args, &@block).write(out)
 			end
 		end
 
 		def write(out=nil)
-			if !!out
-				io = if    out.is_a?(String)       then File.open(out, 'w')
-						 elsif out.respond_to?(:write) then out 
-						 else  $stdout
-						 end
-
-				io.write(render)
+			if out.is_a?(String) && (ext = File.extname(out)) && self.class == Reportable::Report
+				p out
+				p ext
+				p get_format_class(ext.gsub('.','')).new(@other, @args, &@block).write(out)
 			else
-				render
+				if out
+					io = if    out.is_a?(String)       then File.open(out, 'w')
+							 elsif out.respond_to?(:write) then out 
+							 else  $stdout
+							 end
+	
+					str = render
+					io.write(str)
+				else
+					render
+				end
 			end
+		end
+		alias to write
+
+		private
+
+		@@date_format_strings = %w{   }
+
+		def format_file_name
+
+		end
+
+		def get_format_class(format)
+			@klass ||= Reportable.const_get(:"#{format.to_s.upcase}")::Report
 		end
 	end
 
 	module PDF
 		class Report < Reportable::Report
+			attr_accessor :title
+
+			def initialize(other, args={}, &block)
+				super(other, args, &block)
+
+				@title = args[:title]
+
+				raise "headers are required" unless headers?
+			end
+
 			def generate
 				doc = Prawn::Document.new
-				doc.text(@other.title, :size => 14, :style => :bold) if @other.title
+				doc.text(title, :size => 14, :style => :bold) if title
 				doc.text("\n")
 	
-				if @other.sections && !@other.sections.empty?
-					@other.sections.each do |s|
-						if s.subtitle
-							doc.text(s.subtitle, :size => 12, :style => :bold)
-							doc.text("\n")
-						end
-						__gen_body(doc, s)
-						doc.text("\n")
-					end
-				else
-					__gen_body(doc, @other)
-				end
+				# TODO: add reporting on subsets again later
+				__gen_body(doc, @other)
 	
 				doc
 			end
@@ -87,56 +150,19 @@ module Reportable
 	
 	
 			def __gen_body(doc, obj)
-				doc.table(obj.data, :headers      => obj.headers,
-													  :font_size    => 10,
-													  :border_style => :grid,
-													  :header_color => 'dddddd') if obj.data
+				data = data? && headers? ? data.drop(1) : data
+				doc.table(data, :headers      => headers,
+												:font_size    => 10,
+												:border_style => :grid,
+												:header_color => 'dddddd') if data?
 			end
 		end
 	end
 	
-	module HTML
-	
-	end
-	
 	module CSV
-		require 'fastercsv'
-
-
 		class Report < Reportable::Report
-			def initialize(obj, *fields, &block)
-				super(obj, *fields, &block)
-	
-				if @fields.empty?
-					if obj.respond_to?(:fields)
-						obj.fields
-					else
-						raise "Fields cannot be empty"
-					end
-				end
-	
-			end
-
-			def generate
-				(@headers ? FasterCSV.generate_line(@headers) : "") +
-
-				if @other.respond_to?(:us) || @other.respond_to?(:map)
-					@other.map do |o|
-						if @fields
-							FasterCSV.generate_line(@fields.map { |f| o.send(f) })
-						else
-							FasterCSV.generate_line(o.to_a)
-						end
-					end
-				elsif @other.to_a.count > 1
-					FasterCSV.generate_line(@other.to_a)
-				else
-					@other.to_s
-				end.join("").gsub('true', '1').gsub('false', '0')
-			end
-
 			def render
-				generate
+				data.map { |r| FasterCSV.generate_line(r) }.join("").gsub('true', '1').gsub('false', '0')
 			end
 		end
 	end
@@ -144,7 +170,7 @@ module Reportable
 	module YAML
 		class Report < Reportable::Report
 			def render
-				::YAML.dump(@other)
+				::YAML.dump(data)
 			end
 		end
 	end
@@ -227,23 +253,8 @@ module Reportable
 	end
 
 	module Collection
-		def to_pdf(path=nil)
-			pdf = PDF::Report.new(:title => title)
-			sections.each do |d|
-				pdf << PDF::Report.new(:subtitle => d.title,
-															 :data     => d.data,
-															 :headers  => d.headers)
-			end
-
-			if path
-				File.open(path, 'w') { |f| f.write(pdf.render) }
-			else
-				pdf.render
-			end
-		end
-
-		def report(*fields, &block)
-			::Reportable::Report.new(self, *fields, &block)
+		def report(args={}, &block)
+			::Reportable::Report.new(self, args, &block)
 		end
 		alias export report
 	end
