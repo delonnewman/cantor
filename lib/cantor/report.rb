@@ -15,7 +15,7 @@ module Reportable
 			@block   = block
 			@args    = args
 			@fields  = args[:fields]
-			@headers = args[:headers]
+			@headers = args[:headers] || (obj.respond_to?(:headers) ? obj.headers : nil)
 
 			if not @block.nil?
 				@block.call(self, obj)
@@ -32,7 +32,6 @@ module Reportable
 			else
 				@fields = args[:fields]
 			end
-
 
 			@headers = @fields.map { |f| f.to_s.upcase.gsub('_', ' ') } unless @headers
 		end
