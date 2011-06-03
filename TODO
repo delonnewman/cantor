@@ -1,0 +1,69 @@
+- make everything a member in Cantor::Set
+
+- add improve dsl syntax i.e.:
+	defset :Rs {
+		from :class => Hg::Record
+
+		has :title => "Mercury Mailing List"
+		has :fields => Hg::EXPORT_FIELDS
+
+		subset :plco   => where(:program => 'PLCO')
+		subset :active => where(:archived => '\000')
+	}
+
+	defset :Rs, :class => Hg::Record
+
+	set(IDEAS::NRF).count
+	from(IDEAS::NRF).DateOfDeath
+
+	from(:sql => "SELECT * FROM tblRecords").program('PLCO')
+	
+	sql("SELECT pid FROM tblRecords").pid(:match, /^3/)
+
+	table("tblRecords").order(:lastName).group(:lastName, :like => /^#{:a.lastName.to_s.first}/i)
+	# => Cantor::SQLSet @members={:subsets => :A => Cantor::SQLSet..., :B => Cantor::SQLSet ... }...
+
+- add unit tests
+
+- generatlize Cantor::Set, make module with factory methods 'defset'
+	(named sets) and 'set' (aliased as 'from', for anonymous sets)
+
+- add specifics to:
+	-	Cantor::Set::SQL (sql, and table keywords) use DO for back-end
+	-	Cantor::Set::Class (for AR and DM and arbitratry classes)
+	- Cantor::Set::Enumerable (for arbitrary enums) use stdlib Set
+
+- add set operations, set algebra
+
+- create Cantor::Query class as a model fro where clauses
+
+- improve where clauses
+	- add :match, :like for regex
+		table("tblRecords").lastName(:like => /^A/)
+
+	- add :in for inclusion
+		set(IDEAS::NRF).DateOfDeath(:in => set(Hg::Record))
+
+
+- add 'as' for inline set naming e.g.:
+	set(IDEAS::NRF).as(:nrf).join(set(Hg::Record).as(:hg), :where => { :nrf.pid => :hg.pid })
+
+	or
+
+	(set(IDEAS::NRF).as(:nrf) + set(Hg::Record).as(:hg)).where(:nrf.pid => :hg.pid)
+
+- add group_by method generic record ':a' to record
+	(represents given record takes any method record takes)
+	Rs.group_by(:lastName, :like => /^#{:a.lastName.to_s.first}/i)
+
+- abstract reporting into seperate library
+
+- develop 'rachet' library for automatically dividing CPU intensive tasks into concurrent chunks
+
+- develop 'welo' a network service that will use 'rachet' and mysql as a back-end and cantor
+	as a front-end to give a highlevel interface for manipulating datasets as streams 
+
+	Cantor::DB.connect('welo://user:password@localhost:314159')
+	table("tblRecords").order(:lastName).group(:lastName, :match => /^#{:a.lastName.to_s.first}/i)
+	
+	
