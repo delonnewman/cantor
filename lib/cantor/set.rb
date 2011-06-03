@@ -4,37 +4,13 @@ require 'church'
 require File.join(File.dirname(__FILE__), 'report')
 
 module Cantor
-	module ClassMethods
-		def method_missing(method, *args, &block)
-			if match = method.to_s.match(/^cc(\d\d\d)/i)
-				Set.new(match[1], us) { |c, s| s.where(:ccode => c.code) }
-			else
-				us::All.send(method, *args, &block)
-			end
-		end
-
-		def us
-			self
-		end
-
-		def set(&block)
-			Set.new(&block)
-		end
-	end
-
-	def self.included(klass)
-		klass.extend(Reportable::Collection)
-		klass.extend(ClassMethods)
-	end
-
-	class WhereClause
+	class Query
 		attr_reader :block
 
 		def initialize(&block)
 			@block = block
 		end
 	end
-
 
 	class Set
 		include Enumerable
@@ -97,6 +73,19 @@ module Cantor
 			self.eval.join(sep)
 		end
 
+		def sort(&block)
+			Set.new(self) { self.eval.sort(&block) }
+		end
+
+		def sort_by(method, &block)
+			if block
+				Set.new(self) { self.eval.sort_by(&block) }
+			else
+				Set.new(self) { self.eval.sort_by { |r| r.send(method) } }
+			end
+		end
+		alias order sort_by
+
 		def empty?
 			count == 0
 		end
@@ -152,12 +141,14 @@ module Cantor
 		end
 
 		def where(*args, &block)
-			query  = nil
-			method = nil
-			negate = false
+			query   = nil
+			method  = nil
+			methods = nil
+			negate  = false
 
-			query  = args.shift if args.first.is_a?(Hash)
-			method = args.shift if args.first.is_a?(Symbol)
+			query   = args.shift if args.first.is_a?(Hash)
+			method  = args.shift if args.first.is_a?(Symbol)
+			methods = args.shift if args.first.is_a?(Array)
 			if args[0].is_a?(Symbol) && args[0] == :not
 				args.shift
 				negate = true
@@ -171,7 +162,10 @@ module Cantor
 								else
 									Proc.new { |r| r.send(method) }	
 								end
+			end
 
+			if methods
+				block = Proc.new { |r| methods.map { |m| r.send(m) }.include?(args.first) }
 			end
 
 			if @set.respond_to?(:all) && !block

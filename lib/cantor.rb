@@ -23,6 +23,6 @@ module Kernel
 			block = Proc.new { |r| r.send(method) }	
 		end
 
-		Cantor::WhereClause.new(&block)
+		Cantor::Query.new(&block)
 	end
 end
