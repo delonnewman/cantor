@@ -23,6 +23,15 @@
 	table("tblRecords").order(:lastName).group(:lastName, :like => /^#{:a.lastName.to_s.first}/i)
 	# => Cantor::SQLSet @members={:subsets => :A => Cantor::SQLSet..., :B => Cantor::SQLSet ... }...
 
+	csv("/tmp/nlst-import.csv").where(field(1), :like => /^3/)
+	csv("/tmp/nlst-import.csv").where(:date, :lt => Date.today)
+
+	yaml("/etc/safe/rules.yml").count
+
+	json("http://plcoapp/motiv/asus.json").status("open").count
+
+	xml("http://plcoapp/panipani/stats.xml").first.days_til_closeout
+
 - add unit tests
 
 - generatlize Cantor::Set, make module with factory methods 'defset'
@@ -78,7 +87,7 @@
 - develop 'welo' a network service that will use 'rachet' and mysql as a back-end and cantor
 	as a front-end to give a highlevel interface for manipulating datasets as streams 
 
-	Cantor::DB.connect('welo://user:password@localhost:314159')
+	Cantor::Source.connect('welo://user:password@localhost:314159')
 	table("tblRecords").order(:lastName).group(:lastName, :match => /^#{:a.lastName.to_s.first}/i)
 	
 	
