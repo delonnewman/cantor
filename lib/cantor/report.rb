@@ -139,6 +139,7 @@ module Reportable
 				doc = Prawn::Document.new
 				if @other.respond_to?(:title)
 					doc.text(format_string(@other.title), :size => 14, :style => :bold) 
+					doc.text(format_string(@other.subtitle), :size => 10, :style => :italic) if @other.respond_to?(:subtitle)
 					doc.text("\n")
 				end
 	

@@ -5,7 +5,8 @@ require File.join(File.dirname(__FILE__), '..', 'lib', 'cantor')
 
 defset :NRF, IDEAS::NRF
 NRF.members :fields   => [ :PID, :DateOfDeath, :CompletionDate ],
-						:title		=> "NLST NRF %D, %C Cases",
+						:title		=> "NLST NRF",
+						:subtitle => "%D, %C Cases",
 						:sections => [
 							((dc = NRF.DateOfDeath)[:title] = "Deceased, %C Cases"; dc),
 							((sy = NRF.StudyYear('06'))[:title] = "Study Year 06, %C Cases"; sy) ]
