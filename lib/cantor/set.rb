@@ -40,9 +40,6 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr_accessor :superset
-		attr_reader   :members, :subsets
-	
 		def initialize(*args, &block)
 			@set = @superset = nil
 
@@ -64,8 +61,7 @@ module Cantor
 				raise "must specify a set as an enumerable object or a block"
 			end
 
-			@subsets = {:self => self}
-			@members = {} 
+			@members = {:superset => @superset, :subsets => { :self => self }} 
 		end
 
 		def inspect
@@ -82,7 +78,7 @@ module Cantor
 					# dereference ActiveRecord && DataMapper classes
 					@object = @set.eval.all
 				else
-					raise "set should be Enumerable"
+					raise "set should be enumerable"
 				end
 				@object
 			end
@@ -130,6 +126,20 @@ module Cantor
 		end
 		alias []= add_member
 
+		def members(members=nil)
+			if members
+				add_members(members)
+			else
+				@members
+			end
+		end
+
+		# TODO: add support for arrays, convert to hash with object_id for name and merge
+		def add_members(members)
+			@members.merge(members)
+		end
+		alias << add_members
+
 		def find_member(name)
 			@members[name] || (superset ? superset.find_member(name) : nil)
 		end
@@ -176,8 +186,8 @@ module Cantor
 		end
 
 		def method_missing(method, *args, &block)
-			if @subsets.keys.include?(method)
-				@subsets[method]
+			if (subsets = self.find_member(:subsets)).keys.include?(method)
+				subsets[method]
 			elsif member = self.find_member(method)
 				member
 			elsif Enumerable.instance_methods.include?(method)
