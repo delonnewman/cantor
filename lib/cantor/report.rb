@@ -129,11 +129,26 @@ module Reportable
 
 			def generate
 				doc = Prawn::Document.new
-				doc.text(@other.title, :size => 14, :style => :bold) if @other.respond_to?(:title)
-				doc.text("\n")
+				if @other.respond_to?(:title)
+					doc.text(@other.title, :size => 14, :style => :bold) 
+					doc.text("\n")
+				end
 	
-				# TODO: add reporting on subsets again later
-				__gen_body(doc, @other)
+				if @other.respond_to?(:sections)
+					@other.sections.each do |s|
+						if s.respond_to?(:title)
+							doc.text(s.title, :size => 12, :style => :bold)
+							doc.text("\n")
+						end
+						data = self.class.new(s, @args, &@block).data
+						d = data? && headers? ? data.drop(1) : data
+						__gen_body(doc, d)
+						doc.text("\n")
+					end
+				else
+					d = data? && headers? ? data.drop(1) : data
+					__gen_body(doc, d)
+				end
 	
 				doc
 			end
@@ -143,12 +158,11 @@ module Reportable
 			end
 	
 	
-			def __gen_body(doc, obj)
-				d = data? && headers? ? data.drop(1) : data
-				doc.table(d, :headers      => headers,
-										 :font_size    => 10,
-										 :border_style => :grid,
-										 :header_color => 'dddddd') if data?
+			def __gen_body(doc, data)
+				doc.table(data, :headers      => headers,
+										    :font_size    => 10,
+										    :border_style => :grid,
+										    :header_color => 'dddddd') if data?
 			end
 		end
 	end

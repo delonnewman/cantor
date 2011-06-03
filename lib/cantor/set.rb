@@ -61,7 +61,8 @@ module Cantor
 				raise "must specify a set as an enumerable object or a block"
 			end
 
-			@members = {:superset => @superset, :subsets => { :self => self }} 
+			@subsets = { :self => self }
+			@members = { :superset => @superset, :subsets => @subsets} 
 		end
 
 		def inspect
@@ -114,8 +115,9 @@ module Cantor
 		def subset(set)
 			if set.count == 1 && set.respond_to?(:keys)
 				@subset = set.keys.first
-				@subsets[@subset] = where(&set[@subset].block)
-				@subsets[@subset]
+				subsets = self.find_member(:subsets)
+				subsets[@subset] = where(&set[@subset].block)
+				subsets[@subset]
 			else
 				raise "wrong arguments, expected: subset(:name => where([args]))"
 			end
@@ -136,14 +138,18 @@ module Cantor
 
 		# TODO: add support for arrays, convert to hash with object_id for name and merge
 		def add_members(members)
-			@members.merge(members)
+			@members.merge!(members)
 		end
 		alias << add_members
 
 		def find_member(name)
-			@members[name] || (superset ? superset.find_member(name) : nil)
+			@members[name] || (@superset ? @superset.find_member(name) : nil)
 		end
 		alias [] find_member
+
+		def delete(member)
+			@members[member].delete
+		end
 
 		def where(*args, &block)
 			query  = nil
@@ -179,7 +185,7 @@ module Cantor
 
 		alias std_respond_to? respond_to?
 		def respond_to?(meth)
-			@subsets.keys.include?(meth) ||
+			self.find_member(:subsets).keys.include?(meth) ||
 			self.find_member(meth) ||
 			Enumerable.instance_methods.include?(meth) ||
 			std_respond_to?(meth)
