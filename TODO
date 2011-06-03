@@ -38,15 +38,22 @@
 - create Cantor::Query class as a model fro where clauses
 
 - improve where clauses
-	- add :match, :like for regex
+	- add :match, :like for regex (also :notmatch, :unlike)
 		table("tblRecords").lastName(:like => /^A/)
 
-	- add :in for inclusion
+	- add :in for inclusion (also :notin)
 		set(IDEAS::NRF).DateOfDeath(:in => set(Hg::Record))
+
+	- add and and or methods
+		Rs.title('Mr').and(:suffix, :is => 'Jr')
+		Rs.title('Mr').or(:title, :is => 'Ms').or(:title, :is => 'Mrs')
+		Rs.title('Mr').or('Ms').or('Mrs').and(:unlike => /.$/) # will resolve to :title
+
+		Rs.where :title, :is => [ 'Mr', 'Ms', 'Mrs' ], and(:suffix, :is => 'Jr')
 
 
 - add 'as' for inline set naming e.g.:
-	set(IDEAS::NRF).as(:nrf).join(set(Hg::Record).as(:hg), :where => { :nrf.pid => :hg.pid })
+	set(IDEAS::NRF).as(:nrf).unite(set(Hg::Record).as(:hg)).where(:nrf.pid => :hg.pid)
 
 	or
 
