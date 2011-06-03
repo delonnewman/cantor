@@ -33,7 +33,6 @@ module Reportable
 				@fields = args[:fields]
 			end
 
-			@headers = @fields.map { |f| f.to_s.upcase.gsub('_', ' ') } unless @headers
 		end
 
 		def count
@@ -52,7 +51,7 @@ module Reportable
 			if @data then @data
 			else
 				@data = []
-				@data << @headers if headers?
+				@data << (@headers ||= @fields) if headers? || @fields
 	
 				if @other.respond_to?(:us) || @other.respond_to?(:map)
 					@other = @other.respond_to?(:eval) ? @other.eval : @other
@@ -90,7 +89,7 @@ module Reportable
 				p get_format_class(ext.gsub('.','')).new(@other, @args, &@block).write(out)
 			else
 				if out
-					io = if    out.is_a?(String)       then File.open(out, 'w')
+					io = if    out.is_a?(String)       then File.open(format_string(out), 'w')
 							 elsif out.respond_to?(:write) then out 
 							 else  $stdout
 							 end
@@ -104,12 +103,18 @@ module Reportable
 		end
 		alias to write
 
-		private
+		protected
 
-		@@date_format_strings = %w{   }
 
-		def format_file_name
+		def format_string(str, obj=@other)
+			format_strings = { 'd' => Date.today.strftime('%m.%d.%y'),
+												 'D' => Date.today.strftime('%D'),
+												 'C' => obj.count.to_s }
 
+			format_strings.keys.each do |v|
+				str.gsub!("%#{v}", format_strings[v].to_s)
+			end
+			str
 		end
 
 		def get_format_class(format)
@@ -124,20 +129,23 @@ module Reportable
 			def initialize(other, args={}, &block)
 				super(other, args, &block)
 
+				@headers = @fields.map { |f|
+					f.to_s.gsub('_', ' ').gsub(/([a-z0-9]{1,1})([A-Z]{1,1})/, '\1 \2').gsub(/^(\w{1,1})/, '\1'.upcase) } unless @headers
+
 				raise "headers are required" unless headers?
 			end
 
 			def generate
 				doc = Prawn::Document.new
 				if @other.respond_to?(:title)
-					doc.text(@other.title, :size => 14, :style => :bold) 
+					doc.text(format_string(@other.title), :size => 14, :style => :bold) 
 					doc.text("\n")
 				end
 	
 				if @other.respond_to?(:sections)
 					@other.sections.each do |s|
 						if s.respond_to?(:title)
-							doc.text(s.title, :size => 12, :style => :bold)
+							doc.text(format_string(s.title, s), :size => 12, :style => :bold)
 							doc.text("\n")
 						end
 						data = self.class.new(s, @args, &@block).data
