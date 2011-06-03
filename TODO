@@ -51,13 +51,21 @@
 
 		Rs.where :title, :is => [ 'Mr', 'Ms', 'Mrs' ], and(:suffix, :is => 'Jr')
 
-
 - add 'as' for inline set naming e.g.:
 	set(IDEAS::NRF).as(:nrf).unite(set(Hg::Record).as(:hg)).where(:nrf.pid => :hg.pid)
 
 	or
 
 	(set(IDEAS::NRF).as(:nrf) + set(Hg::Record).as(:hg)).where(:nrf.pid => :hg.pid)
+
+- add pattern matching for field names
+	set(Semisonic::LastCall).where(:ccode_?, :is => '003')
+	set(Semisonic::LastCall).ccode_? :is => '003'
+	set(Semisonic::LastCall).where(/^ccode_/, :is => '003')
+
+	same as
+
+	set(Semisonic::LastCall).where([ :ccode_1, :ccode_2, :ccode_3, :ccode_4 ], :is => '003')
 
 - add group_by method generic record ':a' to record
 	(represents given record takes any method record takes)
