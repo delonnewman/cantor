@@ -21,8 +21,6 @@ module Reportable
 				@block.call(self, obj)
 			end
 
-			p self.class
-			p @other.fields
 			if !@fields && @other.respond_to?(:fields)
 				@fields = @other.fields
 			elsif @fields.nil? || @fields.empty?
@@ -67,9 +65,9 @@ module Reportable
 			end
 		end
 
-		@@formats = [ :pdf, :csv ]
+		@@formats = [ :pdf, :csv, :yaml ]
 
-		def as(format, args={})
+		def format(format, args={})
 			if args.respond_to?(:keys)
 				out = args.delete(:to)
 				@args.merge(args)
@@ -86,11 +84,10 @@ module Reportable
 			else                      klass.new(@other, @args, &@block).write(out)
 			end
 		end
+		alias as format
 
 		def write(out=nil)
-			if out.is_a?(String) && (ext = File.extname(out)) && self.class == Reportable::Report
-				p out
-				p ext
+			if self.class == Reportable::Report && out.is_a?(String) && (ext = File.extname(out))
 				p get_format_class(ext.gsub('.','')).new(@other, @args, &@block).write(out)
 			else
 				if out
@@ -128,14 +125,12 @@ module Reportable
 			def initialize(other, args={}, &block)
 				super(other, args, &block)
 
-				@title = args[:title]
-
 				raise "headers are required" unless headers?
 			end
 
 			def generate
 				doc = Prawn::Document.new
-				doc.text(title, :size => 14, :style => :bold) if title
+				doc.text(@other.title, :size => 14, :style => :bold) if @other.respond_to?(:title)
 				doc.text("\n")
 	
 				# TODO: add reporting on subsets again later
@@ -150,11 +145,11 @@ module Reportable
 	
 	
 			def __gen_body(doc, obj)
-				data = data? && headers? ? data.drop(1) : data
-				doc.table(data, :headers      => headers,
-												:font_size    => 10,
-												:border_style => :grid,
-												:header_color => 'dddddd') if data?
+				d = data? && headers? ? data.drop(1) : data
+				doc.table(d, :headers      => headers,
+										 :font_size    => 10,
+										 :border_style => :grid,
+										 :header_color => 'dddddd') if data?
 			end
 		end
 	end

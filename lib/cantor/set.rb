@@ -41,7 +41,7 @@ module Cantor
 		include Reportable::Collection
 
 		attr_accessor :superset
-		attr_reader   :members,  :subsets
+		attr_reader   :members, :subsets
 	
 		def initialize(*args, &block)
 			@set = @superset = nil
@@ -130,12 +130,10 @@ module Cantor
 		end
 		alias []= add_member
 
-		def element?(obj)
-			@subsets.include?(obj) || 
-				(elem = @members.map { |m| m.include?(obj) }.uniq).count == 1 && elem.first == true
+		def find_member(name)
+			@members[name] || (superset ? superset.find_member(name) : nil)
 		end
-		alias element? include?
-		alias element? member?
+		alias [] find_member
 
 		def where(*args, &block)
 			query  = nil
@@ -172,7 +170,7 @@ module Cantor
 		alias std_respond_to? respond_to?
 		def respond_to?(meth)
 			@subsets.keys.include?(meth) ||
-			@members.keys.include?(meth) ||
+			self.find_member(meth) ||
 			Enumerable.instance_methods.include?(meth) ||
 			std_respond_to?(meth)
 		end
@@ -180,8 +178,8 @@ module Cantor
 		def method_missing(method, *args, &block)
 			if @subsets.keys.include?(method)
 				@subsets[method]
-			elsif @members.keys.include?(method)
-				@members[method]
+			elsif member = self.find_member(method)
+				member
 			elsif Enumerable.instance_methods.include?(method)
 				self.eval.send(method, *args, &block)
 			else
