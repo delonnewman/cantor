@@ -1,16 +1,13 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'cantor/set'))
 
-module Cantor
-	VERSION = '0.0.1'
-end
-
 module Kernel
-	def defset(name, *args, &block)
-		s = Cantor::Set.new(*args, &block)
-		s.name = name
+	def defset(name, &block)
+		block.call || raise("must define set with block")
+		raise "must define set with 'from'" unless @set
+		@set[:name] = name
 		mod = self.to_s == 'main' ? Kernel : self
-		mod.const_set(name, s)
-		s
+		mod.const_set(name, @set)
+		@set
 	end
 
 	def set(*args, &block)
@@ -24,5 +21,17 @@ module Kernel
 		end
 
 		Cantor::Query.new(&block)
+	end
+
+	def has(member)
+		@set.members.merge!(member)
+	end
+
+	def from(enum, &block)
+		@set = set(enum, &block)
+	end
+
+	def us
+		@set
 	end
 end
