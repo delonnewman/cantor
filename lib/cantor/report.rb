@@ -55,7 +55,7 @@ module Reportable
 	
 				if @other.respond_to?(:us) || @other.respond_to?(:map)
 					@other = @other.respond_to?(:eval) ? @other.eval : @other
-					@other.each { |o| @data << @fields.map { |f| o.send(f) } }
+					@other.each { |o| @data << @fields.map { |f| o.send(f).to_s } }
 				else
 					raise "object must be enumerable"
 				end
