@@ -144,7 +144,8 @@ module Reportable
 				end
 	
 				if @other.respond_to?(:sections)
-					@other.sections.each do |s|
+					sections = @other.sections
+					sections.each do |s|
 						if s.respond_to?(:title)
 							doc.text(format_string(s.title, s), :size => 12, :style => :bold)
 							doc.text("\n")
@@ -152,7 +153,7 @@ module Reportable
 						data = self.class.new(s, @args, &@block).data
 						d = data? && headers? ? data.drop(1) : data
 						__gen_body(doc, d)
-						doc.text("\n")
+						doc.text("\n") unless s == sections.last
 					end
 				else
 					d = data? && headers? ? data.drop(1) : data

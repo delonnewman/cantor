@@ -11,7 +11,11 @@ module Kernel
 	end
 
 	def set(*args, &block)
-		Cantor::Set.new(*args, &block)
+		if args.first && args.first.is_a?(Cantor::Set)
+			args.first
+		else
+			Cantor::Set.new(*args, &block)
+		end
 	end
 	alias from set
 
@@ -23,12 +27,12 @@ module Kernel
 		Cantor::Query.new(&block)
 	end
 
-	def has(member)
-		@set.members.merge!(member)
+	def has(members)
+		@set.members(members)
 	end
 
-	def from(enum, &block)
-		@set = set(enum, &block)
+	def from(*args, &block)
+		@set = set(*args, &block)
 	end
 
 	def us

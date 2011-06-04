@@ -26,7 +26,11 @@ module Cantor
 					@superset = args[0]
 					@set      = lazy(self) { args[1] }
 				else
-					@set = lazy(self) { args[0] }
+					if args.first.is_a?(self.class)
+						@set = args.first
+					else
+						@set = lazy(self) { args[0] }
+					end
 				end
 			elsif !args.empty? && !!block
 				@superset = args.first
@@ -36,10 +40,16 @@ module Cantor
 			else
 				raise "must specify a set as an enumerable object or a block"
 			end
-
+			
+			# TODO: work on more meaningful default names
+			#	also try to create a sort of namespace/symbol table
+			# so sets can be named and renamed easily.	
+			@name    = object_id.to_s
 			@subsets = { :self => self }
-			@members = { :superset => @superset, :subsets => @subsets} 
+			@members = { :superset => @superset, :subsets => @subsets, :name => @name} 
 		end
+
+		
 
 		def inspect
 			"#<#{self.class.inspect} @superset=#{@superset.inspect} " +
@@ -87,6 +97,10 @@ module Cantor
 		end
 		alias order sort_by
 
+		def uniq
+			Set.new(self) { self.eval.uniq }
+		end
+
 		def empty?
 			count == 0
 		end
@@ -122,7 +136,7 @@ module Cantor
 			if members
 				add_members(members)
 			else
-				@members
+				@members.merge(@subsets)
 			end
 		end
 
@@ -133,7 +147,7 @@ module Cantor
 		alias << add_members
 
 		def find_member(name)
-			@members[name] || (@superset ? @superset.find_member(name) : nil)
+			members[name] || (@superset ? @superset.find_member(name) : nil)
 		end
 		alias [] find_member
 
@@ -169,13 +183,16 @@ module Cantor
 				block = Proc.new { |r| methods.map { |m| r.send(m) }.include?(args.first) }
 			end
 
-			if @set.respond_to?(:all) && !block
-				Set.new(self) { @set.all(query) }
-			elsif @set.respond_to?(:all) && block
-				Set.new(self) { @set.all.send(q_meth, &block) }
-			else
-				Set.new(self) { @set.send(q_meth, &block) }
-			end
+			set = if @set.respond_to?(:all) && !block
+							Set.new(self) { @set.all(query) }
+						elsif @set.respond_to?(:all) && block
+							Set.new(self) { @set.all.send(q_meth, &block) }
+						else
+							Set.new(self) { @set.send(q_meth, &block) }
+						end
+
+			@subsets.merge!(set.name => set)
+			set
 		end
 
 		alias std_respond_to? respond_to?
