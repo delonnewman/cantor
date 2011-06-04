@@ -10,14 +10,14 @@ module Kernel
 		@set
 	end
 
-	def set(*args, &block)
-		if args.first && args.first.is_a?(Cantor::Set)
-			args.first
-		else
-			Cantor::Set.new(*args, &block)
-		end
+	def from(*args, &block)
+		@set = if args.first && args.first.is_a?(Cantor::Set)
+						 args.first
+					 else
+						 Cantor::Set.new(*args, &block)
+					 end
 	end
-	alias from set
+	alias set from unless respond_to?(:set)
 
 	def where(method=nil, &block)
 		if method
@@ -29,10 +29,6 @@ module Kernel
 
 	def has(members)
 		@set.members(members)
-	end
-
-	def from(*args, &block)
-		@set = set(*args, &block)
 	end
 
 	def us
