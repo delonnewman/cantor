@@ -46,7 +46,8 @@ module Cantor
 			# so sets can be named and renamed easily.	
 			@name    = object_id.to_s
 			@subsets = { :self => self }
-			@members = { :superset => @superset, :subsets => @subsets, :name => @name} 
+			@members = { :superset => @superset, :source => @set,
+									 :subsets  => @subsets,  :name   => @name } 
 		end
 
 		
@@ -54,7 +55,7 @@ module Cantor
 		def inspect
 			"#<#{self.class.inspect} @superset=#{@superset.inspect} " +
 			"@subsets=#{@subsets.inspect}>"
-			self.eval.inspect
+			@members.inspect
 		end
 
 		def eval
