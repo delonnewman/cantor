@@ -111,7 +111,11 @@ module Reportable
 												 'D' => Date.today.strftime('%D'),
 												 'C' => obj.count.to_s }
 
+<<<<<<< HEAD
 			str.gsub("%([dDC])") { format_strings[$1].to_s }
+=======
+			str.gsub(/%([dDC])/) { format_strings[$1].to_s }
+>>>>>>> tests
 		end
 
 		def get_format_class(format)

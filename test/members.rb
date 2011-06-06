@@ -1,34 +1,33 @@
-require 'rubygems'
-require 'ideas'
+require 'test/common'
 
-require File.join(File.dirname(__FILE__), '..', 'lib', 'cantor')
+class TestExport < Test::Unit::TestCase
+	class Date
+		def today
+			Date.new(2011, 6, 9)
+		end
+	end
 
-defset :NRF do
-	from IDEAS::NRF
-	has :fields   => IDEAS::NRF.first.attributes.keys, #[ :PID, :DateOfDeath, :CompletionDate ],
-			:title		=> "NLST NRF",
-			:subtitle => "%D, %C Cases",
-			:sections => from([])
-end
+	def setup
+		@count = NRF.count
+		@dir   = '/home/dnewman/public'
+		@file  = "#{@dir}/nlst-nrf"
+	end
 
-defset :DC do
-	from NRF.DateOfDeath
-	has :title => "Deceased, %C Cases",
-			:fields => [ :PID, :DateOfDeath, :CompletionDate ]
+	def test_export_pdf
+		file = "#{@file}.pdf"
+		NRF.export.to(file)
+		assert File.exists?(file)
+	end
 
-	NRF.sections.members(:DC => us)
-end
+	def test_export_csv
+		file = "#{@file}.csv"
+		NRF.export.to(file)
+		assert File.exists?(file)
+	end
 
-NRF.map { |r| r.StudyYear }.uniq.sort.each do |y|
-	defset :"SY#{y}" do
-		from NRF.StudyYear(y)
-		has :title => "Study Year #{y}, %C Cases",
-				:fields => [ :PID, :DateOfDeath, :CompletionDate ]
-	
-		NRF.sections.members(:"SY#{y}" => us)
+	def test_export_yaml
+		file = "#{@file}.yaml"
+		NRF.export.to(file)
+		assert File.exists?(file)
 	end
 end
-
-NRF.export.to('/home/dnewman/public/nlst-nrf-%d-%C.pdf')
-NRF.DateOfDeath.export.to('/home/dnewman/public/nlst-nrf-dc-%d-%C.csv')
-NRF.DateOfDeath.export.to('/home/dnewman/public/nlst-nrf-dc-%d-%C.yaml')
