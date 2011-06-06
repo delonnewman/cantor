@@ -16,6 +16,9 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
+		attr :name, :superset, :subsets, :source
+		@@num_sets = 0
+
 		def initialize(*args, &block)
 			@set = @superset = nil
 
@@ -44,17 +47,21 @@ module Cantor
 			# TODO: work on more meaningful default names
 			#	also try to create a sort of namespace/symbol table
 			# so sets can be named and renamed easily.	
-			@name    = object_id.to_s
 			@subsets = { :self => self }
-			@members = { :superset => @superset, :source => @set,
-									 :subsets  => @subsets,  :name   => @name } 
+			@members = { } 
+
+			@@num_sets.next!
+
+			@name = :"s_#{@@num_sets}"
+
+			@superset.subset(@name => self) if @superset
 		end
 
-		
+		def self.set_count
+			@@num_sets
+		end
 
 		def inspect
-			"#<#{self.class.inspect} @superset=#{@superset.inspect} " +
-			"@subsets=#{@subsets.inspect}>"
 			@members.inspect
 		end
 
@@ -119,10 +126,16 @@ module Cantor
 
 		def subset(set)
 			if set.count == 1 && set.respond_to?(:keys)
-				@subset = set.keys.first
-				subsets = self.find_member(:subsets)
-				subsets[@subset] = where(&set[@subset].block)
-				subsets[@subset]
+				n = set.keys.first
+				v = set[n]
+				subset[n] = if    v.is_a?(Query) then where(&v.block)
+										elsif v.is_a?(Set)   then v
+										else                      Set.new(self) { v }
+										end
+
+				self.members(n => subset[n])
+
+				subset[n]
 			else
 				raise "wrong arguments, expected: subset(:name => where([args]))"
 			end
@@ -198,14 +211,14 @@ module Cantor
 
 		alias std_respond_to? respond_to?
 		def respond_to?(meth)
-			self.find_member(:subsets).keys.include?(meth) ||
+			subsets.keys.include?(meth) ||
 			self.find_member(meth) ||
 			Enumerable.instance_methods.include?(meth) ||
 			std_respond_to?(meth)
 		end
 
 		def method_missing(method, *args, &block)
-			if (subsets = self.find_member(:subsets)).keys.include?(method)
+			if subsets.keys.include?(method)
 				subsets[method]
 			elsif member = self.find_member(method)
 				member
@@ -214,6 +227,12 @@ module Cantor
 			else
 				self.where(method, *args, &block)
 			end
+		end
+
+		private
+
+		def member_name
+			:"m_#{@members.count}"
 		end
 	end
 end
