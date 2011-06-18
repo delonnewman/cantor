@@ -23,7 +23,6 @@ module Cantor
 			EmptySet
 		else
 			Set.new(Sets::Universal, *args, &block)
-#Set.new(*args, &block)
 		end
 	end
 end

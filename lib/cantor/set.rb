@@ -63,7 +63,8 @@ module Cantor
 
 		def inspect
 			"#<#{@name} " +
-			(@members.empty? ? @members.inspect : "#{@members.keys.map { |k| "#{k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
+			(@members.empty? ? '{}' : 
+				"#{@members.keys.map { |k| "#{k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
 			">"
 		end
 
