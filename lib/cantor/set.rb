@@ -16,7 +16,8 @@ module Cantor
 		include Enumerable
 		include Reportable::Collection
 
-		attr :name, :superset, :subsets, :source
+		attr_accessor :name
+		attr_reader :superset, :subsets, :source
 		@@num_sets = 0
 
 		def initialize(*args, &block)
@@ -41,18 +42,17 @@ module Cantor
 			elsif args.empty? && !!block
 				@set = lazy(self, &block)
 			else
-				raise "must specify a set as an enumerable object or a block"
+				#raise "must specify a set as an enumerable object or a block"
 			end
 			
-			# TODO: work on more meaningful default names
-			#	also try to create a sort of namespace/symbol table
+			#	TODO: try to create a sort of namespace/symbol table
 			# so sets can be named and renamed easily.	
 			@subsets = { :self => self }
 			@members = { } 
 
-			@@num_sets.next!
+			@@num_sets = @@num_sets.next
 
-			@name = :"s_#{@@num_sets}"
+			@name = :"s#{@@num_sets}"
 
 			@superset.subset(@name => self) if @superset
 		end
@@ -62,7 +62,9 @@ module Cantor
 		end
 
 		def inspect
-			@members.inspect
+			"#<#{@name} " +
+			(@members.empty? ? @members.inspect : "#{@members.keys.map { |k| "#{k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
+			">"
 		end
 
 		def eval
@@ -128,14 +130,14 @@ module Cantor
 			if set.count == 1 && set.respond_to?(:keys)
 				n = set.keys.first
 				v = set[n]
-				subset[n] = if    v.is_a?(Query) then where(&v.block)
-										elsif v.is_a?(Set)   then v
-										else                      Set.new(self) { v }
-										end
+				subsets[n] = if    v.is_a?(Query) then where(&v.block)
+										 elsif v.is_a?(Set)   then v
+										 else											Set.new(self) { v }
+										 end
 
-				self.members(n => subset[n])
+				self.members(n => subsets[n])
 
-				subset[n]
+				subsets[n]
 			else
 				raise "wrong arguments, expected: subset(:name => where([args]))"
 			end
