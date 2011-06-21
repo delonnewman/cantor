@@ -12,13 +12,16 @@ module Cantor
 		end
 	end
 
+	Name = Struct.new(:value)
+
 	class Set
 		include Enumerable
 		include Reportable::Collection
 
 		attr_accessor :name
-		attr_reader :superset, :subsets, :source
+		attr_reader :superset, :subsets, :id, :source
 		@@num_sets = 0
+		@@names    = {}
 
 		def initialize(*args, &block)
 			@set = @superset = nil
@@ -50,22 +53,47 @@ module Cantor
 			@subsets = { :self => self }
 			@members = { } 
 
+			@source = @set
+
 			@@num_sets = @@num_sets.next
 
-			@name = :"s#{@@num_sets}"
+			@id = :"s#{@@num_sets}"
 
-			@superset.subset(@name => self) if @superset
+			@@names[@id] = nil
+
+			@superset.subset(@id => self) if @superset
 		end
 
-		def self.set_count
+		def self.count
 			@@num_sets
 		end
 
+		def self.names
+			@@names
+		end
+
+		def name=(name)
+			@@names[@id] = name
+			@name = name
+		end
+
+		def name
+			@name || @id
+		end
+
 		def inspect
-			"#<#{@name} " +
+			"#<#{name} " +
 			(@members.empty? ? '{}' : 
-				"#{@members.keys.map { |k| "#{k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
+				"#{@members.keys.map { |k| "#{@@names[k] || k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
 			">"
+		end
+
+		def member_names
+			@mns ||= @members.keys.map { |id| @@names.fetch(id, nil) || id }
+		end
+
+		def each_member(&block)
+			@members.each_pair { |id, v| block.call(id, @@names.fetch(k, nil), v) }
 		end
 
 		def eval
@@ -88,7 +116,7 @@ module Cantor
 		end
 
 		def map(&block)
-			Set.new(self) { self.eval.map(&block) }
+			Set.new { self.eval.map(&block) }
 		end
 
 		def join(sep)
@@ -96,7 +124,7 @@ module Cantor
 		end
 
 		def sort(&block)
-			Set.new(self) { self.eval.sort(&block) }
+			subset(:self_sorted => Set.new { self.eval.sort(&block) })
 		end
 
 		def sort_by(method, &block)
@@ -109,7 +137,7 @@ module Cantor
 		alias order sort_by
 
 		def uniq
-			Set.new(self) { self.eval.uniq }
+			subset(:self_uniq => Set.new { self.eval.uniq })
 		end
 
 		def empty?
@@ -133,7 +161,7 @@ module Cantor
 				v = set[n]
 				subsets[n] = if    v.is_a?(Query) then where(&v.block)
 										 elsif v.is_a?(Set)   then v
-										 else											Set.new(self) { v }
+										 else											 Set.new(self) { v }
 										 end
 
 				self.members(n => subsets[n])
@@ -163,12 +191,8 @@ module Cantor
 		end
 		alias << add_members
 
-		def []=(name, value)
-			add_members(name => value)
-		end
-
-		def find_member(name)
-			members[name] || (@superset ? @superset.find_member(name) : nil)
+		def find_member(id)
+			members[id] || (@superset ? @superset.find_member(id) : nil)
 		end
 		alias [] find_member
 
@@ -176,8 +200,8 @@ module Cantor
 			@members.fetch(member).delete
 		end
 
-		def member?(name)
-			!!find_member(name)	
+		def member?(id)
+			!!find_member(id)	
 		end
 
 		def where(*args, &block)
@@ -216,7 +240,7 @@ module Cantor
 							Set.new(self) { @set.send(q_meth, &block) }
 						end
 
-			@subsets.merge!(set.name => set)
+			subset(set.name => set)
 			set
 		end
 
@@ -231,6 +255,8 @@ module Cantor
 		def method_missing(method, *args, &block)
 			if    subsets.keys.include?(method)     then subsets.fetch(method)
 			elsif member = self.find_member(method) then member
+			elsif @@names.has_value?(method)
+				self.send(@@names.select { |k, v| v == method }.last.first)
 			elsif Enumerable.instance_methods.include?(method)
 				self.eval.send(method, *args, &block)
 			elsif method.to_s.match(/=$/)
