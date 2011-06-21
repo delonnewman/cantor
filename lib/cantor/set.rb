@@ -48,8 +48,6 @@ module Cantor
 				#raise "must specify a set as an enumerable object or a block"
 			end
 			
-			#	TODO: try to create a sort of namespace/symbol table
-			# so sets can be named and renamed easily.	
 			@subsets = { :self => self }
 			@members = { } 
 
