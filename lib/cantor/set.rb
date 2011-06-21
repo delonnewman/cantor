@@ -163,13 +163,21 @@ module Cantor
 		end
 		alias << add_members
 
+		def []=(name, value)
+			add_members(name => value)
+		end
+
 		def find_member(name)
 			members[name] || (@superset ? @superset.find_member(name) : nil)
 		end
 		alias [] find_member
 
 		def delete(member)
-			@members[member].delete
+			@members.fetch(member).delete
+		end
+
+		def member?(name)
+			!!find_member(name)	
 		end
 
 		def where(*args, &block)
@@ -221,12 +229,12 @@ module Cantor
 		end
 
 		def method_missing(method, *args, &block)
-			if subsets.keys.include?(method)
-				subsets[method]
-			elsif member = self.find_member(method)
-				member
+			if    subsets.keys.include?(method)     then subsets.fetch(method)
+			elsif member = self.find_member(method) then member
 			elsif Enumerable.instance_methods.include?(method)
 				self.eval.send(method, *args, &block)
+			elsif method.to_s.match(/=$/)
+				add_members(method.to_s.gsub('=', '').to_sym => args.first)
 			else
 				self.where(method, *args, &block)
 			end
