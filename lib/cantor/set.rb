@@ -19,9 +19,8 @@ module Cantor
 		include Reportable::Collection
 
 		attr_accessor :name
-		attr_reader :superset, :subsets, :id, :source
+		attr_reader :superset, :subsets, :id, :source, :names
 		@@num_sets = 0
-		@@names    = {}
 
 		def initialize(*args, &block)
 			@set = @superset = nil
@@ -49,7 +48,8 @@ module Cantor
 			end
 			
 			@subsets = { :self => self }
-			@members = { } 
+			@members = {} 
+			@names   = {} # namespace
 
 			@source = @set
 
@@ -57,7 +57,6 @@ module Cantor
 
 			@id = :"s#{@@num_sets}"
 
-			@@names[@id] = nil
 
 			@superset.subset(@id => self) if @superset
 		end
@@ -66,12 +65,8 @@ module Cantor
 			@@num_sets
 		end
 
-		def self.names
-			@@names
-		end
-
 		def name=(name)
-			@@names[@id] = name
+			superset.names[@id] = name if superset
 			@name = name
 		end
 
@@ -82,16 +77,16 @@ module Cantor
 		def inspect
 			"#<#{name} " +
 			(@members.empty? ? '{}' : 
-				"#{@members.keys.map { |k| "#{@@names[k] || k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
+				"#{@members.keys.map { |k| "#{@names[k]||k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
 			">"
 		end
 
 		def member_names
-			@mns ||= @members.keys.map { |id| @@names.fetch(id, nil) || id }
+			@mns ||= @members.keys.map { |id| @names.fetch(id, nil) || id }
 		end
 
 		def each_member(&block)
-			@members.each_pair { |id, v| block.call(id, @@names.fetch(k, nil), v) }
+			@members.each_pair { |id, v| block.call(id, @names.fetch(k, nil), v) }
 		end
 
 		def eval
@@ -253,8 +248,8 @@ module Cantor
 		def method_missing(method, *args, &block)
 			if    subsets.keys.include?(method)     then subsets.fetch(method)
 			elsif member = self.find_member(method) then member
-			elsif @@names.has_value?(method)
-				self.send(@@names.select { |k, v| v == method }.last.first)
+			elsif @names.has_value?(method)
+				self.send(@names.select { |k, v| v == method }.last.first)
 			elsif Enumerable.instance_methods.include?(method)
 				self.eval.send(method, *args, &block)
 			elsif method.to_s.match(/=$/)
