@@ -29,8 +29,12 @@ module Cantor
 				if args.count > 2
 					@set = lazy(self) { args }
 				elsif args.count == 2
-					if args[0].is_a?(Cantor::Set) && args[1].is_a?(Hash)
-						@set     = args[0]
+					if args[1].is_a?(Hash)
+						if args.first.is_a?(Cantor::Set)
+							@set = args[0]
+						else
+							@set = lazy(self) { args[0] }
+						end
 						@members = args[1]
 					else
 						@superset = args[0]
