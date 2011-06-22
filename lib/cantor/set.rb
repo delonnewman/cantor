@@ -57,7 +57,6 @@ module Cantor
 
 			@id = :"s#{@@num_sets}"
 
-
 			@superset.subset(@id => self) if @superset
 		end
 
@@ -77,7 +76,7 @@ module Cantor
 		def inspect
 			"#<#{name} " +
 			(@members.empty? ? '{}' : 
-				"#{@members.keys.map { |k| "#{@names[k]||k}=#{@members.fetch(k).inspect}" }.join(' ')}") +
+				"{ #{@members.keys.map { |k| "#{@names[k]||k}: #{@members.fetch(k).inspect}" }.join(', ')} }") +
 			">"
 		end
 
@@ -132,6 +131,26 @@ module Cantor
 		def uniq
 			subset(:self_uniq => Set.new { self.eval.uniq })
 		end
+
+		def union(enum)
+			s = nil
+			if enum.is_a?(Cantor::Set)
+				if @source
+					s = Set.new { self.eval + enum.eval }
+				else
+					s = Set.new
+					s.members(self.members)
+					s.members(enum.members)
+				end
+				enum.superset = s
+			else
+				s = Set.new { self.eval + enum }
+			end
+
+			self.superset = s
+			s
+		end
+		alias + union
 
 		def empty?
 			count == 0

@@ -4,10 +4,6 @@ module Cantor
 	module Sets
 		U    = Universal = Set.new; Universal.name = :Universal
 		Null = EmptySet  = Set.new; EmptySet.name  = :EmptySet
-#		R    = Reals     = Set.new(U) { [Numeric] }
-#		Q    = Rationals = R.rational?
-#		Z    = Integers  = Q.integer?
-#		N    = Naturals  = Z.where(:negative?, false)
 	end
 
 	def self.set(*args, &block)
