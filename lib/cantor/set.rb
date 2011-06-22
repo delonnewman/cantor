@@ -104,7 +104,11 @@ module Cantor
 		end
 
 		def each(&block)
-			self.eval.each(&block)
+			if @source
+				self.eval.each(&block)
+			else
+				each_member(&block)
+			end
 		end
 
 		def map(&block)
