@@ -29,8 +29,13 @@ module Cantor
 				if args.count > 2
 					@set = lazy(self) { args }
 				elsif args.count == 2
-					@superset = args[0]
-					@set      = lazy(self) { args[1] }
+					if args[0].is_a?(Cantor::Set) && args[1].is_a?(Hash)
+						@set     = args[0]
+						@members = args[1]
+					else
+						@superset = args[0]
+						@set      = lazy(self) { args[1] }
+					end
 				else
 					if args.first.is_a?(self.class)
 						@set = args.first
@@ -47,9 +52,9 @@ module Cantor
 				#raise "must specify a set as an enumerable object or a block"
 			end
 			
-			@subsets = { :self => self }
-			@members = {} 
-			@names   = {} # namespace
+			@subsets   = { :self => self }
+			@members ||= {} 
+			@names     = {} # namespace
 
 			@source = @set
 
