@@ -160,6 +160,7 @@ module Cantor
 			s
 		end
 		alias + union
+		alias | union
 
 		def empty?
 			count == 0
@@ -206,7 +207,8 @@ module Cantor
 			end
 		end
 
-		# TODO: add support for arrays, convert to hash with object_id for name and merge
+		# TODO: add support for arrays, convert to hash
+		# with object_id for name and merge
 		def add_members(members)
 			@members.merge!(members)
 		end
@@ -218,11 +220,11 @@ module Cantor
 		alias [] find_member
 
 		def delete(member)
-			@members.fetch(member).delete
+			@members.delete(member)
 		end
 
 		def member?(id)
-			!!find_member(id)	
+			!!find_member(id)	|| @names.has_value?(id)
 		end
 
 		def where(*args, &block)
@@ -261,6 +263,10 @@ module Cantor
 							Set.new(self) { @set.send(q_meth, &block) }
 						end
 
+			# TODO: Add caching and automatic naming of subsets
+			# i.e. > NRF.DateOfDeath => #<NRF.DateOfDeath ...>
+			#			 > NRF.subsets => { :DateOfDeath : #<NRF.DateOfDeath ...> }
+
 			subset(set.name => set)
 			set
 		end
@@ -268,7 +274,7 @@ module Cantor
 		alias std_respond_to? respond_to?
 		def respond_to?(meth)
 			subsets.keys.include?(meth) ||
-			self.find_member(meth) ||
+			self.member?(meth) ||
 			Enumerable.instance_methods.include?(meth) ||
 			std_respond_to?(meth)
 		end
