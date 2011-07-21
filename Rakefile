@@ -1,5 +1,6 @@
 # Jeweler
 begin
+	require 'rubygems'
   require 'jeweler'
   Jeweler::Tasks.new do |spec|
     spec.name        = "cantor"
