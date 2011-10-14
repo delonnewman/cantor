@@ -135,6 +135,7 @@ module Reportable
 
 			def generate
 				doc = Prawn::Document.new
+				doc.number_pages "<page> of <total>"
 				if @other.respond_to?(:title)
 					doc.text(format_string(@other.title), :size => 14, :style => :bold) 
 					doc.text(format_string(@other.subtitle), :size => 10, :style => :italic) if @other.respond_to?(:subtitle)
