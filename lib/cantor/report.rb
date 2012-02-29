@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'prawn'
 require 'prawn/layout'
 require 'fastercsv'

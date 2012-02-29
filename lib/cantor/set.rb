@@ -177,6 +177,7 @@ module Cantor
       else
         s = Struct.new(*fields)
         c = @cache[name] = map { |r| s.new(*fields.map { |f| r.send(f) }) }
+        c.fields = fields
         c
       end
     end

@@ -1,5 +1,6 @@
 # Jeweler
 begin
+	require 'rubygems'
   require 'jeweler'
   Jeweler::Tasks.new do |spec|
     spec.name        = "cantor"
@@ -10,15 +11,11 @@ begin
     spec.authors     = %w{Delon Newman}
 
     # Dependecies
-#    spec.add_development_dependency('fastercsv')
-#    spec.add_development_dependency('faker')
     spec.add_development_dependency('jeweler')
 
 		spec.add_dependency('church')
-#    spec.add_dependency('mongrel')
-#    spec.add_dependency('will_paginate')
-#    spec.add_dependency('rails', '>= 2.3.4')
-#    spec.add_dependency('mysql')
+		spec.add_dependency('prawn')
+		spec.add_dependency('fastercsv')
   end
 rescue LoadError
   puts "Jeweler not available.  Install it with: gem install jeweler"
