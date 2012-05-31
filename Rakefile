@@ -13,7 +13,6 @@ begin
     # Dependecies
     spec.add_development_dependency('jeweler')
 
-		spec.add_dependency('church')
 		spec.add_dependency('prawn')
 		spec.add_dependency('fastercsv')
   end

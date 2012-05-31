@@ -1,5 +1,8 @@
-require File.expand_path(File.join(File.dirname(__FILE__), 'cantor/set'))
+require 'rubygems'
 require 'fastercsv'
+
+$:.unshift File.expand_path(File.dirname(__FILE__))
+require 'cantor/set'
 
 module Cantor
   module Sets

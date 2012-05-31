@@ -1,7 +1,5 @@
-require 'rubygems'
-require 'church'
-
-require File.join(File.dirname(__FILE__), 'report')
+require 'cantor/lazy'
+require 'cantor/report'
 
 module Cantor
   class Query
@@ -16,7 +14,7 @@ module Cantor
 
   class Set
     include Enumerable
-    include Reportable::Collection
+    include ::Cantor::Reportable::Collection
 
     attr_accessor :name
     attr_reader :superset, :subsets, :id, :source, :names
