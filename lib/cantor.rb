@@ -11,7 +11,14 @@ module Cantor
   end
 
   def self.set(*args, &block)
-    if args.first && args.first.is_a?(Set)
+    if args.first && args.first.is_a?(String)
+      file = args.first
+      if file =~ /csv$/
+        FasterCSV.read(file)
+      else
+        raise "'#{ext}' is not a supported file format"
+      end
+    elsif args.first && args.first.is_a?(Set)
       if args.count == 1 && !block
         args.first
       elsif args.count > 1  && !block

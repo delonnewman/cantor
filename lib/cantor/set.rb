@@ -98,7 +98,7 @@ module Cantor
     def eval
       if @object then @object
       else
-        if (@object = @set.eval).respond_to?(:each)
+        if @object.respond_to?(:each)
           @object
         elsif !@object.respond_to?(:each) && @object.respond_to?(:all)
           # dereference ActiveRecord && DataMapper classes
