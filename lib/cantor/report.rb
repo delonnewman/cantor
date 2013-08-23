@@ -1,7 +1,6 @@
-require 'rubygems'
 require 'prawn'
 require 'prawn/layout'
-require 'fastercsv'
+require 'csv'
 require 'yaml'
 
 require 'cantor/lazy'
@@ -178,7 +177,7 @@ module Cantor
     module CSV
       class Report < Reportable::Report
         def render
-          data.map { |r| FasterCSV.generate_line(r) }.join("").gsub('true', '1').gsub('false', '0')
+          data.map { |r| CSV.generate_line(r) }.join("").gsub('true', '1').gsub('false', '0')
         end
       end
     end

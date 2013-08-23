@@ -7,14 +7,13 @@ begin
     spec.summary     = "Reportable, exportable data sets and relational logic"
     spec.description = spec.summary
     spec.email       = "drnewman@phrei.org"
-    spec.homepage    = "http://github.com/delonnewman/church"
+    spec.homepage    = "http://github.com/delonnewman/cantor"
     spec.authors     = %w{Delon Newman}
 
     # Dependecies
     spec.add_development_dependency('jeweler')
 
 		spec.add_dependency('prawn')
-		spec.add_dependency('fastercsv')
   end
 rescue LoadError
   puts "Jeweler not available.  Install it with: gem install jeweler"

@@ -1,5 +1,4 @@
-require 'rubygems'
-require 'fastercsv'
+require 'csv'
 
 $:.unshift File.expand_path(File.dirname(__FILE__))
 require 'cantor/set'
@@ -14,7 +13,7 @@ module Cantor
     if args.first && args.first.is_a?(String)
       file = args.first
       if file =~ /csv$/
-        FasterCSV.read(file)
+        CSV.read(file)
       else
         raise "'#{ext}' is not a supported file format"
       end
